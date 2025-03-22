@@ -1,6 +1,7 @@
 // src/interfaces/http/routes/index.ts
 import { Router } from "express";
 import { authRoutes } from "./auth.routes";
+import { orderRoutes } from "./order.routes";
 
 /**
  * Router principal que agrupa todas las rutas de la API.
@@ -13,3 +14,4 @@ import { authRoutes } from "./auth.routes";
 export const routes = Router();
 
 routes.use("/auth", authRoutes);
+routes.use("/orders", orderRoutes);

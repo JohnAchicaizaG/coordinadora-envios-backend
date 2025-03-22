@@ -9,6 +9,8 @@ import swaggerJSDoc from "swagger-jsdoc";
  * - `openapi`: Versión de OpenAPI utilizada (3.0.0).
  * - `info`: Información general de la API (título, versión y descripción).
  * - `servers`: Lista de servidores disponibles (ej. localhost).
+ * - `components.securitySchemes`: Define los esquemas de autenticación (Bearer JWT).
+ * - `security`: Aplica el esquema de seguridad por defecto en todos los endpoints (opcional).
  * - `apis`: Archivos donde Swagger buscará anotaciones para generar la documentación.
  */
 export const swaggerSpec = swaggerJSDoc({
@@ -40,6 +42,20 @@ export const swaggerSpec = swaggerJSDoc({
         servers: [
             {
                 url: "http://localhost:4000",
+            },
+        ],
+        components: {
+            securitySchemes: {
+                bearerAuth: {
+                    type: "http",
+                    scheme: "bearer",
+                    bearerFormat: "JWT", // Solo informativo, Swagger UI lo muestra
+                },
+            },
+        },
+        security: [
+            {
+                bearerAuth: [], // Aplica bearerAuth globalmente si lo deseas
             },
         ],
     },
