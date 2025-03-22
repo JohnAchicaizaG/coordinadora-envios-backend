@@ -1,0 +1,20 @@
+# Ignorar dependencias
+node_modules/
+
+# Ignorar archivos de build (si usas tsup, tsc o similar)
+dist/
+build/
+
+# Ignorar configuraciones y archivos que no necesitas lintar
+.env
+*.log
+
+# Ignorar configuraciones de herramientas si no deseas lintarlas
+.prettierrc
+.eslintrc
+.eslintignore
+*.json
+
+# Otros (por si tienes coverage, documentación, etc.)
+coverage/
+docs/

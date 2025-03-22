@@ -1,0 +1,63 @@
+{
+  "name": "skeleton-node",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node dist/index.js",
+    "build": "tsup src/index.ts --format esm --outDir dist --dts",
+    "dev": "tsx watch src/index.ts",
+    "clean": "rimraf dist",
+    "lint": "eslint",
+    "lint:fix": "npm run lint -- --fix",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:verbose": "jest --verbose",
+    "format": "prettier --check 'src/**/*.{ts,tsx,js,jsx,json,md}'",
+    "format:fix": "prettier --write 'src/**/*.{ts,tsx,js,jsx,json,md}'"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@tsconfig/node22": "^22.0.0",
+    "@types/express": "^5.0.1",
+    "@types/node": "^22.13.10",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "morgan": "^1.10.0",
+    "pino": "^9.6.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.22.0",
+    "@types/cors": "^2.8.17",
+    "@types/jest": "^29.5.14",
+    "@types/morgan": "^1.9.9",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.8",
+    "eslint": "^9.22.0",
+    "eslint-config-prettier": "^10.1.1",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-jest": "^28.11.0",
+    "eslint-plugin-prettier": "^5.2.3",
+    "globals": "^16.0.0",
+    "jest": "^29.7.0",
+    "pino-pretty": "^13.0.0",
+    "prettier": "3.5.3",
+    "rimraf": "^6.0.1",
+    "ts-jest": "^29.2.6",
+    "tsup": "^8.4.0",
+    "tsx": "^4.19.3",
+    "typescript-eslint": "^8.27.0"
+  },
+  "overrides": {
+    "eslint": "^9.22.0"
+  }
+}
