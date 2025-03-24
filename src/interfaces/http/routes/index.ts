@@ -1,4 +1,3 @@
-// src/interfaces/http/routes/index.ts
 import { Router } from "express";
 import { authRoutes } from "./auth.routes";
 import { orderRoutes } from "./order.routes";

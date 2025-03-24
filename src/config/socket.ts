@@ -1,5 +1,6 @@
 import { Server as IOServer } from "socket.io";
 import { Server as HttpServer } from "http";
+import { logger } from "./logger";
 
 /** Instancia global del servidor Socket.IO */
 let io: IOServer;
@@ -18,10 +19,10 @@ export const initSocket = (server: HttpServer): void => {
     });
 
     io.on("connection", (socket) => {
-        console.log("🟢 Cliente conectado:", socket.id);
+        logger.info("🟢 Cliente conectado:", socket.id);
 
         socket.on("disconnect", () => {
-            console.log("🔴 Cliente desconectado:", socket.id);
+            logger.info("🔴 Cliente desconectado:", socket.id);
         });
     });
 };

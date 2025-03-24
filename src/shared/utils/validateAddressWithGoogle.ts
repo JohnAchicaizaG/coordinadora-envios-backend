@@ -1,3 +1,4 @@
+import { logger } from "@/config/logger";
 import axios from "axios";
 
 const GOOGLE_API_KEY = process.env.GOOGLE_MAPS_API_KEY as string;
@@ -23,12 +24,12 @@ export async function isValidAddress(address: string): Promise<boolean> {
                 key: GOOGLE_API_KEY,
             },
         });
-        console.log("🔎 Google Maps response:", response.data);
+        logger.info("Google Maps response:", response.data);
         const { status, results } = response.data;
 
         return status === "OK" && results.length > 0;
     } catch (err) {
-        console.error("🛑 Error al validar dirección con Google:", err);
+        logger.info("Error al validar dirección con Google:", err);
         return false;
     }
 }

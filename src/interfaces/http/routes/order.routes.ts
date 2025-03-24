@@ -6,6 +6,7 @@ import { createOrderSchema } from "../../../aplication/validators/createOrderSch
 import { assignRouteSchema } from "@/aplication/validators/assignRouteSchema";
 import { authorizeRoles } from "../middlewares/authorizeRoles";
 import { Role } from "@/domain/enums/Role";
+import { advancedOrderFilterSchema } from "@/aplication/validators/advancedOrderFilterSchema";
 
 /**
  * Rutas relacionadas con la gestión de órdenes de envío.
@@ -82,4 +83,10 @@ orderRoutes.get(
     isAuthenticated,
     authorizeRoles(Role.Admin),
     OrderController.getAll,
+);
+orderRoutes.get(
+    "/report/advanced",
+    isAuthenticated,
+    validateSchema(advancedOrderFilterSchema, "query"),
+    OrderController.getAdvancedReport,
 );

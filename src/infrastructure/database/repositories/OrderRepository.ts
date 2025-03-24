@@ -8,7 +8,8 @@ import { AssignRouteDTO } from "@/aplication/dto/AssignRouteDTO";
 import { DetailedOrder } from "@/domain/interfaces/DetailedOrder";
 import { redisClient } from "@/config/redis";
 import { HttpError } from "@/shared/errors/HttpError";
-
+import { AdvancedOrderFilterDTO } from "@/aplication/dto/AdvancedOrderFilterDTO";
+import moment from "moment-timezone";
 /**
  * Implementación del repositorio de órdenes que maneja las operaciones de base de datos
  * y caché para las órdenes del sistema.
@@ -112,6 +113,18 @@ export class OrderRepository implements IOrderRepository {
         return orders;
     }
 
+    /**
+     * Obtiene el estado actual de una orden específica.
+     * Implementa un patrón de caché con Redis para mejorar el rendimiento.
+     *
+     * @param {number} orderId - ID de la orden a consultar
+     * @returns {Promise<string>} Estado actual de la orden
+     * @throws {HttpError} 404 - Si la orden no existe
+     * @throws {Error} Si hay un error al consultar la base de datos o el caché
+     *
+     * @example
+     * const status = await orderRepository.getOrderStatus(123);
+     */
     async getOrderStatus(orderId: number): Promise<string> {
         // 1. Intentar desde Redis
         const cachedStatus = await redisClient.get(`order:${orderId}:status`);
@@ -129,5 +142,104 @@ export class OrderRepository implements IOrderRepository {
 
         const { status } = rows[0] as RowDataPacket;
         return status;
+    }
+
+    /**
+     * Obtiene un reporte detallado de órdenes basado en filtros avanzados.
+     * Implementa un patrón de caché con Redis para mejorar el rendimiento.
+     *
+     * @param {AdvancedOrderFilterDTO} filters - Objeto con los filtros a aplicar
+     * @param {string} [filters.status] - Estado de las órdenes a filtrar
+     * @param {Date} [filters.startDate] - Fecha inicial del rango
+     * @param {Date} [filters.endDate] - Fecha final del rango
+     * @param {number} [filters.transporterId] - ID del transportador
+     * @param {number} [filters.routeId] - ID de la ruta
+     * @returns {Promise<DetailedOrder[]>} Lista de órdenes detalladas que cumplen con los filtros
+     * @throws {Error} Si hay un error al consultar la base de datos o el caché
+     *
+     * @example
+     * const filters = {
+     *   status: 'PENDING',
+     *   startDate: new Date('2024-01-01'),
+     *   endDate: new Date('2024-01-31')
+     * };
+     * const report = await orderRepository.getAdvancedReport(filters);
+     */
+    async getAdvancedReport(
+        filters: AdvancedOrderFilterDTO,
+    ): Promise<DetailedOrder[]> {
+        const { status, startDate, endDate, transporterId, routeId } = filters;
+
+        const queryParts: string[] = [];
+        const values: (string | number | Date)[] = [];
+
+        // 🕒 Convertir fechas a zona horaria 'America/Bogota'
+        if (startDate) {
+            const zonedStart = moment
+                .tz(startDate, "America/Bogota")
+                .startOf("day")
+                .format("YYYY-MM-DD HH:mm:ss");
+            queryParts.push("o.created_at >= ?");
+            values.push(zonedStart);
+        }
+
+        if (endDate) {
+            const zonedEnd = moment
+                .tz(endDate, "America/Bogota")
+                .endOf("day")
+                .format("YYYY-MM-DD HH:mm:ss");
+            queryParts.push("o.created_at <= ?");
+            values.push(zonedEnd);
+        }
+
+        if (status) {
+            queryParts.push("o.status = ?");
+            values.push(status);
+        }
+
+        if (transporterId) {
+            queryParts.push("o.transporter_id = ?");
+            values.push(transporterId);
+        }
+
+        if (routeId) {
+            queryParts.push("o.route_id = ?");
+            values.push(routeId);
+        }
+
+        const whereClause =
+            queryParts.length > 0 ? `WHERE ${queryParts.join(" AND ")}` : "";
+        const cacheKey = `orders:report:${Buffer.from(JSON.stringify(filters)).toString("base64")}`;
+
+        const cached = await redisClient.get(cacheKey);
+        if (cached) return JSON.parse(cached);
+
+        const query = `
+        SELECT 
+            o.id AS orderId,
+            o.origin_address AS originAddress, 
+            o.weight,
+            o.dimensions,
+            o.product_type AS productType,
+            o.destination_address AS destination,
+            o.status,
+            o.created_at,
+            r.name AS routeName,
+            t.name AS transporterName
+        FROM orders o
+        LEFT JOIN routes r ON o.route_id = r.id
+        LEFT JOIN transporters t ON o.transporter_id = t.id
+        ${whereClause}
+        ORDER BY o.created_at DESC
+    `;
+
+        const [rows] = await db.query(query, values);
+        const results = rows as DetailedOrder[];
+
+        await redisClient.set(cacheKey, JSON.stringify(results), {
+            EX: 60 * 5,
+        });
+
+        return results;
     }
 }

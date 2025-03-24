@@ -5,6 +5,7 @@ import { successResponse } from "@/shared/helpers/response";
 import { handleControllerError } from "@/shared/helpers/handleControllerError";
 import { HttpError } from "@/shared/errors/HttpError";
 import { AssignRoute } from "@/aplication/use-cases/AssignRoute";
+import { AdvancedOrderFilterDTO } from "@/aplication/dto/AdvancedOrderFilterDTO";
 
 const repo = new OrderRepository();
 
@@ -105,6 +106,16 @@ export class OrderController {
             });
         } catch (err) {
             handleControllerError(res, err, "No se pudo obtener el estado");
+        }
+    }
+
+    static async getAdvancedReport(req: Request, res: Response): Promise<void> {
+        try {
+            const filters = req.query as unknown as AdvancedOrderFilterDTO;
+            const orders = await repo.getAdvancedReport(filters);
+            successResponse(res, "Reporte obtenido con éxito", { orders });
+        } catch (err) {
+            handleControllerError(res, err, "Error al obtener el reporte");
         }
     }
 }

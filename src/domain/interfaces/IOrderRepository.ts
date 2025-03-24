@@ -1,6 +1,8 @@
+import { AdvancedOrderFilterDTO } from "@/aplication/dto/AdvancedOrderFilterDTO";
 import { AssignRouteDTO } from "@/aplication/dto/AssignRouteDTO";
 import { CreateOrderDTO } from "@/aplication/dto/CreateOrderDTO";
 import { Order } from "@/domain/entities/Order";
+import { DetailedOrder } from "./DetailedOrder";
 
 /**
  * Interfaz para el repositorio de órdenes.
@@ -17,4 +19,7 @@ export interface IOrderRepository {
      */
     createOrder(data: CreateOrderDTO & { userId: number }): Promise<Order>;
     assignRoute(data: AssignRouteDTO): Promise<void>;
+    getAdvancedReport(
+        filters: AdvancedOrderFilterDTO,
+    ): Promise<DetailedOrder[]>;
 }

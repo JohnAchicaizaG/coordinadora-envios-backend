@@ -1,26 +1,33 @@
-import { AnyZodObject } from "zod";
+import { AnyZodObject, ZodError } from "zod";
 import { Request, Response, NextFunction } from "express";
 
 /**
- * Middleware para validar el cuerpo de una solicitud HTTP (`req.body`)
- * usando un esquema definido con Zod.
+ * Middleware para validar una parte del request (body, query, params)
+ * usando un esquema de Zod.
  *
- * Si la validación falla, el error es pasado al middleware de manejo de errores.
- *
- * @function validateSchema
- * @param {AnyZodObject} schema - Esquema Zod a utilizar para la validación.
- * @returns {(req: Request, res: Response, next: NextFunction) => void} Middleware de validación.
- *
- * @example
- * router.post("/login", validateSchema(loginUserSchema), loginController);
+ * @param {AnyZodObject} schema - Esquema de Zod
+ * @param {"body" | "query" | "params"} location - Parte del request a validar (por defecto: "body")
+ * @returns Middleware de validación
  */
-export const validateSchema =
-    (schema: AnyZodObject) =>
-    (req: Request, res: Response, next: NextFunction): void => {
+export const validateSchema = (
+    schema: AnyZodObject,
+    location: "body" | "query" | "params" = "body",
+) => {
+    return (req: Request, res: Response, next: NextFunction): void => {
         try {
-            schema.parse(req.body);
+            const result = schema.parse(req[location]);
+            req[location] = result;
             next();
         } catch (err) {
-            next(err);
+            if (err instanceof ZodError) {
+                res.status(400).json({
+                    success: false,
+                    message: "Error de validación",
+                    errors: err.errors,
+                });
+            } else {
+                next(err);
+            }
         }
     };
+};

@@ -19,7 +19,7 @@ export const updateOrderStatus = async (orderId: number, status: string) => {
         orderId,
     ]);
 
-    // 2. Insertar en historial
+    // 2. Insertar en historia
     await db.query(
         "INSERT INTO order_status_history (order_id, status) VALUES (?, ?)",
         [orderId, status],
@@ -28,7 +28,8 @@ export const updateOrderStatus = async (orderId: number, status: string) => {
     // 3. Guardar en Redis
     await redisClient.set(`order:${orderId}:status`, status);
 
-    // 4. Emitir por socket
+    //TODO: Implementar la emisión por socket
+    // 4. Emitir por sockekt
     getIO().emit("order:status", {
         orderId,
         status,
