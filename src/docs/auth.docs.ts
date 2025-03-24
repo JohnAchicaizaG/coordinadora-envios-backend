@@ -23,7 +23,7 @@
  *             properties:
  *               email:
  *                 type: string
- *                 example: user@example.com
+ *                 example: admin@coordinadora.com
  *               password:
  *                 type: string
  *                 example: "123456"
@@ -55,7 +55,7 @@
  *             properties:
  *               email:
  *                 type: string
- *                 example: user@example.com
+ *                 example: admin@coordinadora.com
  *               password:
  *                 type: string
  *                 example: "123456"

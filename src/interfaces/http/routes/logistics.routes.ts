@@ -4,6 +4,8 @@ import { isAuthenticated } from "../middlewares/isAuthenticated";
 import { createTransporterSchema } from "@/aplication/validators/createTransporterSchema";
 import { validateSchema } from "../middlewares/validateSchema";
 import { createRouteSchema } from "@/aplication/validators/createRouteSchema";
+import { Role } from "@/domain/enums/Role";
+import { authorizeRoles } from "../middlewares/authorizeRoles";
 
 /**
  * Rutas relacionadas con la gestión logística (transportistas y rutas).
@@ -40,6 +42,7 @@ logisticsRoutes.get("/transporters", LogisticsController.getAllTransporters);
 logisticsRoutes.post(
     "/transporters",
     isAuthenticated,
+    authorizeRoles(Role.Admin),
     validateSchema(createTransporterSchema),
     LogisticsController.createTransporter,
 );
@@ -70,6 +73,8 @@ logisticsRoutes.get("/routes", LogisticsController.getAllRoutes);
 logisticsRoutes.post(
     "/routes",
     isAuthenticated,
+    isAuthenticated,
+    authorizeRoles(Role.Admin),
     validateSchema(createRouteSchema),
     LogisticsController.createRoute,
 );

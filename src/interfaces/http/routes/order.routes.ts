@@ -4,6 +4,8 @@ import { validateSchema } from "../middlewares/validateSchema";
 import { isAuthenticated } from "../middlewares/isAuthenticated";
 import { createOrderSchema } from "../../../aplication/validators/createOrderSchema";
 import { assignRouteSchema } from "@/aplication/validators/assignRouteSchema";
+import { authorizeRoles } from "../middlewares/authorizeRoles";
+import { Role } from "@/domain/enums/Role";
 
 /**
  * Rutas relacionadas con la gestión de órdenes de envío.
@@ -35,8 +37,32 @@ orderRoutes.post(
     OrderController.create,
 );
 
+/**
+ * @route GET /status/:orderId
+ * @description Obtiene el estado actual de una orden específica.
+ * @middleware isAuthenticated - Verifica si el usuario está autenticado mediante JWT.
+ * @controller OrderController.getStatus
+ *
+ * @param {string} orderId - ID único de la orden
+ * @returns {Object} Estado actual de la orden
+ */
 orderRoutes.get("/status/:orderId", isAuthenticated, OrderController.getStatus);
 
+/**
+ * @route POST /assign
+ * @description Asigna una ruta a una orden específica.
+ * @middleware isAuthenticated - Verifica si el usuario está autenticado mediante JWT.
+ * @middleware validateSchema(assignRouteSchema) - Valida el cuerpo de la solicitud.
+ * @controller OrderController.assignRoute
+ *
+ * @example
+ * POST /api/orders/assign
+ * body: {
+ *   orderId: "123",
+ *   routeId: "456",
+ *   assignedTo: "789"
+ * }
+ */
 orderRoutes.post(
     "/assign",
     isAuthenticated,
@@ -44,4 +70,16 @@ orderRoutes.post(
     OrderController.assignRoute,
 );
 
-orderRoutes.get("/admin", OrderController.getAll);
+/**
+ * @route GET /admin
+ * @description Obtiene todas las órdenes (endpoint administrativo).
+ * @controller OrderController.getAll
+ *
+ * @returns {Array} Lista de todas las órdenes en el sistema
+ */
+orderRoutes.get(
+    "/admin",
+    isAuthenticated,
+    authorizeRoles(Role.Admin),
+    OrderController.getAll,
+);

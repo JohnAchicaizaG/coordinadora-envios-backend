@@ -1,6 +1,7 @@
 import { CreateTransporterDTO } from "@/aplication/dto/CreateTransporterDTO";
 import { db } from "@/config/db";
 import { ITransporterRepository } from "@/domain/interfaces/ITransporterRepository";
+import { Transporter } from "@/domain/entities/Transporter";
 
 /**
  * Implementación del repositorio de transportadores que maneja las operaciones de base de datos
@@ -27,12 +28,12 @@ export class TransporterRepository implements ITransporterRepository {
 
     /**
      * Obtiene todos los transportadores de la base de datos.
-     * @returns {Promise<any[]>} Una promesa que se resuelve con un array de transportadores
+     * @returns {Transporter<Transporter[]>} Una promesa que se resuelve con un array de transportadores
      */
-    async getAllTransporters(): Promise<any[]> {
+    async getAllTransporters(): Promise<Transporter[]> {
         const [rows] = await db.query(
-            "SELECT * FROM transporters ORDER BY created_at DESC",
+            "SELECT * FROM transporters WHERE available = true ORDER BY created_at DESC",
         );
-        return rows as any[];
+        return rows as Transporter[];
     }
 }

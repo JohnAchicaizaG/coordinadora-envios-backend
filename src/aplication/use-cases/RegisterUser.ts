@@ -20,7 +20,7 @@ export class RegisterUser {
      * Ejecuta el registro de un nuevo usuario.
      *
      * @param {RegisterUserDTO} data - Datos del usuario a registrar.
-     * @returns {Promise<any>} Usuario recién creado.
+     * @returns {Promise<User>} Usuario recién creado.
      * @throws {HttpError} Si el correo ya se encuentra registrado.
      */
     async execute(data: RegisterUserDTO) {

@@ -1,4 +1,5 @@
 import { CreateRouteDTO } from "@/aplication/dto/CreateRouteDTO";
+import { Route } from "../entities/Route";
 
 /**
  * Interfaz que define las operaciones del repositorio de rutas
@@ -14,7 +15,7 @@ export interface IRouteRepository {
 
     /**
      * Obtiene todas las rutas disponibles en el sistema
-     * @returns {Promise<any[]>} Promesa que resuelve con un array de rutas
+     * @returns {Promise<Route[]>} Promesa que resuelve con un array de rutas
      */
-    getAllRoutes(): Promise<any[]>;
+    getAllRoutes(): Promise<Route[]>;
 }

@@ -1,4 +1,5 @@
 import { CreateTransporterDTO } from "@/aplication/dto/CreateTransporterDTO";
+import { Transporter } from "@/domain/entities/Transporter";
 
 /**
  * Interfaz que define las operaciones del repositorio de transportadores.
@@ -18,7 +19,7 @@ export interface ITransporterRepository {
     /**
      * Obtiene todos los transportadores registrados en el sistema.
      *
-     * @returns {Promise<any[]>} Lista de transportadores ordenados por fecha de creación descendente
+     * @returns {Promise<Transporter[]>} Lista de transportadores ordenados por fecha de creación descendente
      */
-    getAllTransporters(): Promise<any[]>;
+    getAllTransporters(): Promise<Transporter[]>;
 }

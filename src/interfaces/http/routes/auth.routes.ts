@@ -3,9 +3,6 @@ import { AuthController } from "../controllers/AuthController";
 import { validateSchema } from "../middlewares/validateSchema";
 import { registerUserSchema } from "@/aplication/validators/registerUserSchema";
 import { loginUserSchema } from "@/aplication/validators/loginUserSchema";
-import { isAuthenticated } from "../middlewares/isAuthenticated";
-import { authorizeRoles } from "../middlewares/authorizeRoles";
-import { Role } from "@/domain/enums/Role";
 
 /**
  * Rutas relacionadas con la autenticación de usuarios.
@@ -36,24 +33,4 @@ authRoutes.post(
     "/login",
     validateSchema(loginUserSchema),
     AuthController.login,
-);
-
-//TODO:Prueba de roles autorizados en las proximas rutas (ELIMINAR)
-/**
- * @route GET /prueba
- * @description Ruta protegida solo accesible para usuarios autenticados con rol ADMIN.
- * @middleware isAuthenticated - Verifica token JWT.
- * @middleware authorizeRoles(Role.Admin) - Verifica rol de acceso.
- * @returns {JSON} Mensaje de acceso permitido.
- */
-authRoutes.get(
-    "/prueba",
-    isAuthenticated,
-    authorizeRoles(Role.Admin),
-    (req, res) => {
-        res.json({
-            success: true,
-            message: "✅ ¡Acceso permitido! Estás autenticado como ADMIN.",
-        });
-    },
 );

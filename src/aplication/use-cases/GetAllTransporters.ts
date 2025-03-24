@@ -1,5 +1,4 @@
 import { ITransporterRepository } from "@/domain/interfaces/ITransporterRepository";
-
 /**
  * Caso de uso para obtener todos los transportadores
  * @class GetAllTransporters
@@ -13,7 +12,7 @@ export class GetAllTransporters {
 
     /**
      * Ejecuta el caso de uso para obtener todos los transportadores
-     * @returns {Promise<any>} Lista de transportadores
+     * @returns {Promise<Transporter[]>} Lista de transportadores
      */
     async execute() {
         return this.repo.getAllTransporters();

@@ -1,6 +1,7 @@
 import { db } from "@/config/db";
 import { CreateRouteDTO } from "@/aplication/dto/CreateRouteDTO";
 import { IRouteRepository } from "@/domain/interfaces/IRouteRepository";
+import { Route } from "@/domain/entities/Route";
 
 /**
  * Implementación del repositorio de rutas que maneja las operaciones de base de datos
@@ -19,12 +20,12 @@ export class RouteRepository implements IRouteRepository {
 
     /**
      * Obtiene todas las rutas almacenadas en la base de datos
-     * @returns {Promise<any[]>} Una promesa que resuelve a un array de rutas ordenadas por fecha de creación descendente
+     * @returns {Promise<Route[]>} Una promesa que resuelve a un array de rutas ordenadas por fecha de creación descendente
      */
-    async getAllRoutes(): Promise<any[]> {
+    async getAllRoutes(): Promise<Route[]> {
         const [rows] = await db.query(
             "SELECT * FROM routes ORDER BY created_at DESC",
         );
-        return rows as any[];
+        return rows as Route[];
     }
 }

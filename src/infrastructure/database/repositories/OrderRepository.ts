@@ -3,11 +3,23 @@ import { IOrderRepository } from "@/domain/interfaces/IOrderRepository";
 import { CreateOrderDTO } from "@/aplication/dto/CreateOrderDTO";
 import { OrderStatus } from "@/domain/enums/OrderStatus";
 import { Order } from "@/domain/entities/Order";
-import { ResultSetHeader } from "mysql2";
+import { ResultSetHeader, RowDataPacket } from "mysql2";
 import { AssignRouteDTO } from "@/aplication/dto/AssignRouteDTO";
 import { DetailedOrder } from "@/domain/interfaces/DetailedOrder";
+import { redisClient } from "@/config/redis";
+import { HttpError } from "@/shared/errors/HttpError";
 
+/**
+ * Implementación del repositorio de órdenes que maneja las operaciones de base de datos
+ * y caché para las órdenes del sistema.
+ */
 export class OrderRepository implements IOrderRepository {
+    /**
+     * Crea una nueva orden en el sistema.
+     * @param {CreateOrderDTO & { userId: number }} data - Datos de la orden a crear, incluyendo el ID del usuario
+     * @returns {Promise<Order>} La orden creada con su ID y timestamps
+     * @throws {Error} Si hay un error al insertar en la base de datos
+     */
     async createOrder(
         data: CreateOrderDTO & { userId: number },
     ): Promise<Order> {
@@ -34,6 +46,12 @@ export class OrderRepository implements IOrderRepository {
         };
     }
 
+    /**
+     * Asigna una ruta y un transportador a una orden existente.
+     * @param {AssignRouteDTO} data - Datos de asignación de ruta
+     * @returns {Promise<void>}
+     * @throws {Error} Si hay un error al actualizar la orden
+     */
     async assignRoute(data: AssignRouteDTO): Promise<void> {
         await db.query(
             "UPDATE orders SET route_id = ?, transporter_id = ?, start_time = CURRENT_TIMESTAMP WHERE id = ?",
@@ -41,7 +59,29 @@ export class OrderRepository implements IOrderRepository {
         );
     }
 
+    /**
+     * Obtiene todos los pedidos detallados con información de rutas y transportadores.
+     * Implementa un patrón de caché con Redis para mejorar el rendimiento.
+     *
+     * @param {string} [status] - Estado opcional para filtrar los pedidos
+     * @returns {Promise<DetailedOrder[]>} Lista de pedidos detallados con información de rutas y transportadores
+     * @throws {Error} Si hay un error al consultar la base de datos o el caché
+     *
+     * @example
+     * const allOrders = await orderRepository.getAllDetailedOrders();
+     *
+     * const pendingOrders = await orderRepository.getAllDetailedOrders('PENDING');
+     */
     async getAllDetailedOrders(status?: string): Promise<DetailedOrder[]> {
+        const cacheKey = status ? `orders:status:${status}` : "orders:all";
+
+        //  1. Intentar obtener del cache
+        const cached = await redisClient.get(cacheKey);
+        if (cached) {
+            return JSON.parse(cached);
+        }
+
+        //  2. Si no hay cache, consultar la base de datos
         const baseQuery = `
             SELECT 
                 o.id AS orderId,
@@ -62,6 +102,32 @@ export class OrderRepository implements IOrderRepository {
         `;
 
         const [rows] = await db.query(baseQuery, status ? [status] : []);
-        return rows as DetailedOrder[];
+        const orders = rows as DetailedOrder[];
+
+        // 3. Guardar en Redis para futuras consultas
+        await redisClient.set(cacheKey, JSON.stringify(orders), {
+            EX: 60 * 5,
+        });
+
+        return orders;
+    }
+
+    async getOrderStatus(orderId: number): Promise<string> {
+        // 1. Intentar desde Redis
+        const cachedStatus = await redisClient.get(`order:${orderId}:status`);
+        if (cachedStatus) return cachedStatus;
+
+        // 2. Si no hay, ir a la base de datos
+        const [rows] = await db.query<RowDataPacket[]>(
+            "SELECT status FROM orders WHERE id = ?",
+            [orderId],
+        );
+
+        if (!Array.isArray(rows) || rows.length === 0) {
+            throw new HttpError(404, "Orden no encontrada");
+        }
+
+        const { status } = rows[0] as RowDataPacket;
+        return status;
     }
 }

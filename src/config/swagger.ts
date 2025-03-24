@@ -49,13 +49,13 @@ export const swaggerSpec = swaggerJSDoc({
                 bearerAuth: {
                     type: "http",
                     scheme: "bearer",
-                    bearerFormat: "JWT", // Solo informativo, Swagger UI lo muestra
+                    bearerFormat: "JWT",
                 },
             },
         },
         security: [
             {
-                bearerAuth: [], // Aplica bearerAuth globalmente si lo deseas
+                bearerAuth: [],
             },
         ],
     },
