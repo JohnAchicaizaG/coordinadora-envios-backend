@@ -2,6 +2,7 @@
 import { Router } from "express";
 import { authRoutes } from "./auth.routes";
 import { orderRoutes } from "./order.routes";
+import { logisticsRoutes } from "./logistics.routes";
 
 /**
  * Router principal que agrupa todas las rutas de la API.
@@ -15,3 +16,4 @@ export const routes = Router();
 
 routes.use("/auth", authRoutes);
 routes.use("/orders", orderRoutes);
+routes.use("/logistics", logisticsRoutes);

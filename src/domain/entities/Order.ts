@@ -16,10 +16,13 @@ import { OrderStatus } from "../enums/OrderStatus";
 export interface Order {
     id: number;
     userId: number;
+    originAddress: string;
     weight: number;
     dimensions: string;
     productType: string;
     destinationAddress: string;
     status: OrderStatus;
+    start_time: Date | null;
+    delivered_time: Date | null;
     createdAt: Date;
 }

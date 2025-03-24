@@ -8,6 +8,9 @@ docker run --name task-manager-db \
 
 
 
+
+
+
 ////
 
 
@@ -33,6 +36,7 @@ CREATE TABLE transporters (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     available BOOLEAN DEFAULT TRUE,
+    capacity INT NOT NULL DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -47,6 +51,8 @@ CREATE TABLE orders (
     route_id INT DEFAULT NULL,
     transporter_id INT DEFAULT NULL,
     status ENUM('pending', 'in_transit', 'delivered') NOT NULL DEFAULT 'pending',
+    start_time TIMESTAMP NULL DEFAULT NULL,
+    delivered_time TIMESTAMP NULL DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (route_id) REFERENCES routes(id),
@@ -61,3 +67,5 @@ CREATE TABLE order_status_history (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (order_id) REFERENCES orders(id)
 );
+
+

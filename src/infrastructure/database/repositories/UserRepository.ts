@@ -1,4 +1,3 @@
-// src/infrastructure/database/repositories/UserRepository.ts
 import { db } from "../../../config/db";
 import { IUserRepository } from "../../../domain/interfaces/IUserRepository";
 import { User } from "../../../domain/entities/User";

@@ -10,6 +10,7 @@ import { z } from "zod";
  * @property {string} destinationAddress - Dirección de destino, mínimo 5 caracteres.
  */
 export const createOrderSchema = z.object({
+    originAddress: z.string().min(5),
     weight: z.number().positive(),
     dimensions: z.string().min(3),
     productType: z.string().min(3),

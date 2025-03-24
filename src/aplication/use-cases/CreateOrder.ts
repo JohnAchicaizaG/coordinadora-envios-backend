@@ -3,6 +3,8 @@ import { IOrderRepository } from "@/domain/interfaces/IOrderRepository";
 import { Order } from "@/domain/entities/Order";
 import { HttpError } from "@/shared/errors/HttpError";
 import { isValidAddress } from "@/shared/utils/validateAddressWithGoogle";
+import { OrderStatus } from "@/domain/enums/OrderStatus";
+import { updateOrderStatus } from "@/shared/utils/updateOrderStatus";
 
 /**
  * Caso de uso para la creación de una orden de envío.
@@ -27,12 +29,19 @@ export class CreateOrder {
      * @throws {HttpError} Si la dirección de destino no es válida.
      */
     async execute(userId: number, data: CreateOrderDTO): Promise<Order> {
-        const valid = await isValidAddress(data.destinationAddress);
-        if (!valid) {
-            throw new HttpError(400, "Dirección de destino inválida");
-        }
+        const isOriginValid = await isValidAddress(data.originAddress);
+        if (!isOriginValid)
+            throw new HttpError(400, "Dirección de origen inválida");
 
+        const valid = await isValidAddress(data.destinationAddress);
+        if (!valid) throw new HttpError(400, "Dirección de destino inválida");
+
+        // Crear la orden en la base de datos
         const order = await this.orderRepo.createOrder({ ...data, userId });
+
+        // 🧠 Centraliza: actualiza BD, historial, Redis y socket
+        await updateOrderStatus(order.id, OrderStatus.Pending);
+
         return order;
     }
 }

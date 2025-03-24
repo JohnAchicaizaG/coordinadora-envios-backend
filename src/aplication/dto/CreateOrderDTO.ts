@@ -8,6 +8,7 @@
  * @property {string} destinationAddress - Dirección completa de destino del envío.
  */
 export interface CreateOrderDTO {
+    originAddress: string;
     weight: number;
     dimensions: string;
     productType: string;

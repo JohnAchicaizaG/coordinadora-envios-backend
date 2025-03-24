@@ -1,3 +1,4 @@
+import { AssignRouteDTO } from "@/aplication/dto/AssignRouteDTO";
 import { CreateOrderDTO } from "@/aplication/dto/CreateOrderDTO";
 import { Order } from "@/domain/entities/Order";
 
@@ -15,4 +16,5 @@ export interface IOrderRepository {
      * @returns {Promise<Order>} Orden recién creada.
      */
     createOrder(data: CreateOrderDTO & { userId: number }): Promise<Order>;
+    assignRoute(data: AssignRouteDTO): Promise<void>;
 }

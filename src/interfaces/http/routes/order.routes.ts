@@ -3,6 +3,7 @@ import { OrderController } from "../controllers/OrderController";
 import { validateSchema } from "../middlewares/validateSchema";
 import { isAuthenticated } from "../middlewares/isAuthenticated";
 import { createOrderSchema } from "../../../aplication/validators/createOrderSchema";
+import { assignRouteSchema } from "@/aplication/validators/assignRouteSchema";
 
 /**
  * Rutas relacionadas con la gestión de órdenes de envío.
@@ -33,3 +34,14 @@ orderRoutes.post(
     validateSchema(createOrderSchema),
     OrderController.create,
 );
+
+orderRoutes.get("/status/:orderId", isAuthenticated, OrderController.getStatus);
+
+orderRoutes.post(
+    "/assign",
+    isAuthenticated,
+    validateSchema(assignRouteSchema),
+    OrderController.assignRoute,
+);
+
+orderRoutes.get("/admin", OrderController.getAll);

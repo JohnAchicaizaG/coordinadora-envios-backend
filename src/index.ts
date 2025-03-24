@@ -1,16 +1,40 @@
-import { logger } from "@/config/logger";
-import app from "./app";
-
-const PORT = process.env.PORT || 3000;
-
 /**
  * Punto de entrada principal de la aplicación.
+ * Configura y ejecuta el servidor HTTP con soporte para WebSocket y Redis.
  *
- * Inicia el servidor Express en el puerto especificado y muestra un mensaje
- * de confirmación en consola usando el logger configurado.
- *
- * @const {number|string} PORT - Puerto en el que se inicia el servidor (por defecto: 3000).
+ * @module index
  */
-app.listen(PORT, () => {
-    logger.info(`✅ Servidor corriendo en http://localhost:${PORT}`);
+
+import { logger } from "@/config/logger";
+import app from "./app";
+import http from "http";
+import { initSocket } from "./config/socket";
+import { connectRedis } from "./config/redis";
+import chalk from "chalk";
+
+/**
+ * Puerto en el que se ejecutará el servidor.
+ * Se obtiene de las variables de entorno o usa 4000 como valor predeterminado.
+ * @const {number} PORT
+ */
+const PORT = process.env.PORT || 4000;
+
+/**
+ * Servidor HTTP creado con Express y configurado para WebSocket.
+ * @const {http.Server} server
+ */
+const server = http.createServer(app);
+
+//  Iniciamos Socket.IO con el servidor
+initSocket(server);
+
+//  Conectamos Redis
+connectRedis();
+
+server.listen(PORT, () => {
+    logger.info(
+        chalk.yellowBright(
+            `✅ Servidor + WebSocket corriendo en http://localhost:${PORT}`,
+        ),
+    );
 });
