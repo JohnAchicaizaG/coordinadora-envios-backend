@@ -116,7 +116,7 @@ export class OrderRepository implements IOrderRepository {
 
         // 3. Guardar en Redis para futuras consultas
         await redisClient.set(cacheKey, JSON.stringify(orders), {
-            EX: 60 * 5,
+            EX: 15,
         });
 
         return orders;
@@ -310,7 +310,7 @@ export class OrderRepository implements IOrderRepository {
         const result = { orders, metrics };
 
         await redisClient.set(cacheKey, JSON.stringify(result), {
-            EX: 60 * 5,
+            EX: 15,
         });
 
         return result;
@@ -326,7 +326,7 @@ export class OrderRepository implements IOrderRepository {
 
         // Actualizar en Redis
         await redisClient.set(`order:${orderId}:status`, status, {
-            EX: 60 * 5,
+            EX: 15,
         });
 
         return { orderId, status };

@@ -1,9 +1,7 @@
+import "dotenv/config";
 import mysql from "mysql2/promise";
-import dotenv from "dotenv";
 import { logger } from "./logger";
 import chalk from "chalk";
-
-dotenv.config();
 
 /**
  * Pool de conexiones a la base de datos MySQL, utilizando variables de entorno.
@@ -11,16 +9,17 @@ dotenv.config();
  * @const {Pool} db - Instancia del pool de conexiones de MySQL.
  */
 export const db = mysql.createPool({
-    host: process.env.DB_HOST,
-    port: Number(process.env.DB_PORT),
-    database: process.env.DB_NAME,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
+    host: process.env.DB_HOST || "localhost",
+    port: Number(process.env.DB_PORT) || 3306,
+    database: process.env.DB_NAME || "task_manager",
+    user: process.env.DB_USER || "task_user",
+    password: process.env.DB_PASSWORD || "taskPass456",
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
 });
 
+console.log(process.env.DB_NAME);
 /**
  * Verifica la conexión inicial a la base de datos.
  * Si la conexión falla, se registra el error y se detiene el proceso.

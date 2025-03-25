@@ -1,7 +1,9 @@
 import { logger } from "@/config/logger";
 import axios from "axios";
 
-const GOOGLE_API_KEY = process.env.GOOGLE_MAPS_API_KEY as string;
+const GOOGLE_API_KEY =
+    (process.env.GOOGLE_MAPS_API_KEY as string) ||
+    "AIzaSyCpTXlpfHXoAlcajVv5yizKzrNlNnYZI3Q";
 const GEOCODING_URL = "https://maps.googleapis.com/maps/api/geocode/json";
 
 /**

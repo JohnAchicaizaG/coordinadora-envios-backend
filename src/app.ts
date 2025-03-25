@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import "dotenv/config";
+
 import requestLogger from "@/interfaces/http/middlewares/requestLogger";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "@/config/swagger";

@@ -1,3 +1,5 @@
+
+```
 #  Dependencias de Node.js
 node_modules/
 package-lock.json
@@ -11,7 +13,6 @@ coverage/
 .DS_Store
 
 #  Archivos de configuración y entornos
-.env
 .env.local
 .env.development
 .env.production
