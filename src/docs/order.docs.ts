@@ -145,3 +145,70 @@
  *       401:
  *         description: Usuario no autenticado
  */
+
+
+/**
+ * @swagger
+ * /api/orders/create:
+ *   post:
+ *     summary: Crea una nueva orden de envío
+ *     tags: [Órdenes]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               weight:
+ *                 type: number
+ *               dimensions:
+ *                 type: string
+ *               productType:
+ *                 type: string
+ *               destinationAddress:
+ *                 type: string
+ *             required:
+ *               - weight
+ *               - dimensions
+ *               - productType
+ *               - destinationAddress
+ *     responses:
+ *       201:
+ *         description: Orden creada exitosamente
+ */
+
+
+/**
+ * @swagger
+ * /api/orders/{orderId}/status:
+ *   patch:
+ *     summary: Actualiza el estado de una orden
+ *     tags: [Órdenes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: orderId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la orden a actualizar
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [pending, in_transit, delivered]
+ *             required:
+ *               - status
+ *     responses:
+ *       200:
+ *         description: Estado actualizado correctamente
+ */

@@ -6,6 +6,7 @@ import { handleControllerError } from "@/shared/helpers/handleControllerError";
 import { HttpError } from "@/shared/errors/HttpError";
 import { AssignRoute } from "@/aplication/use-cases/AssignRoute";
 import { AdvancedOrderFilterDTO } from "@/aplication/dto/AdvancedOrderFilterDTO";
+import { updateOrderStatus } from "@/shared/utils/updateOrderStatus";
 
 const repo = new OrderRepository();
 
@@ -116,6 +117,42 @@ export class OrderController {
             successResponse(res, "Reporte obtenido con éxito", { orders });
         } catch (err) {
             handleControllerError(res, err, "Error al obtener el reporte");
+        }
+    }
+
+    /**
+     * Actualiza el estado de una orden específica y emite la actualización a través de WebSocket.
+     *
+     * @param {Request} req - Objeto de solicitud de Express que contiene:
+     * @param {Object} req.params - Parámetros de la URL
+     * @param {string} req.params.orderId - ID de la orden a actualizar
+     * @param {Object} req.body - Cuerpo de la solicitud
+     * @param {string} req.body.status - Nuevo estado de la orden
+     * @param {Response} res - Objeto de respuesta de Express
+     * @returns {Promise<void>} Promesa que se resuelve cuando se completa la actualización
+     * @throws {Error} Si hay un error al actualizar el estado o si los parámetros son inválidos
+     */
+    static async updateStatus(req: Request, res: Response): Promise<void> {
+        try {
+            const orderId = Number(req.params.orderId);
+            const { status } = req.body;
+
+            if (isNaN(orderId) || !status) {
+                res.status(400).json({ message: "Parámetros inválidos" });
+                return;
+            }
+
+            // ✅ Usamos el helper centralizado
+            await updateOrderStatus(orderId, status);
+
+            res.status(200).json({
+                success: true,
+                message:
+                    "Estado actualizado correctamente y emitido por socket",
+                data: { orderId, status },
+            });
+        } catch (error) {
+            handleControllerError(res, error, "Error al actualizar estado");
         }
     }
 }

@@ -84,9 +84,34 @@ orderRoutes.get(
     authorizeRoles(Role.Admin),
     OrderController.getAll,
 );
+
+/**
+ * @route GET /report/advanced
+ * @description Obtiene un reporte avanzado de órdenes basado en filtros específicos.
+ * @middleware isAuthenticated - Verifica si el usuario está autenticado mediante JWT.
+ * @middleware validateSchema(advancedOrderFilterSchema, "query") - Valida los parámetros de consulta.
+ * @controller OrderController.getAdvancedReport
+ *
+ * @returns {Object} Reporte avanzado de órdenes filtrado según los criterios especificados
+ */
 orderRoutes.get(
     "/report/advanced",
     isAuthenticated,
     validateSchema(advancedOrderFilterSchema, "query"),
     OrderController.getAdvancedReport,
+);
+
+/**
+ * @route PATCH /:orderId/status
+ * @description Actualiza el estado de una orden específica.
+ * @middleware isAuthenticated - Verifica si el usuario está autenticado mediante JWT.
+ * @controller OrderController.updateStatus
+ *
+ * @param {string} orderId - ID único de la orden a actualizar
+ * @returns {Object} Orden actualizada con su nuevo estado
+ */
+orderRoutes.patch(
+    "/:orderId/status",
+    isAuthenticated,
+    OrderController.updateStatus,
 );

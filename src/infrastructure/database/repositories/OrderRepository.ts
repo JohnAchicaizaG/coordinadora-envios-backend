@@ -10,6 +10,15 @@ import { redisClient } from "@/config/redis";
 import { HttpError } from "@/shared/errors/HttpError";
 import { AdvancedOrderFilterDTO } from "@/aplication/dto/AdvancedOrderFilterDTO";
 import moment from "moment-timezone";
+import { TransporterPerformanceMetric } from "@/aplication/dto/TransporterPerformanceMetric";
+
+interface MetricRow {
+    transporterId: number;
+    transporterName: string;
+    deliveredCount: number;
+    avgDeliveryTimeSeconds: number;
+}
+
 /**
  * Implementación del repositorio de órdenes que maneja las operaciones de base de datos
  * y caché para las órdenes del sistema.
@@ -165,17 +174,21 @@ export class OrderRepository implements IOrderRepository {
      * };
      * const report = await orderRepository.getAdvancedReport(filters);
      */
-    async getAdvancedReport(
-        filters: AdvancedOrderFilterDTO,
-    ): Promise<DetailedOrder[]> {
+    async getAdvancedReport(filters: AdvancedOrderFilterDTO): Promise<{
+        orders: DetailedOrder[];
+        metrics: TransporterPerformanceMetric[];
+    }> {
         const { status, startDate, endDate, transporterId, routeId } = filters;
 
         const queryParts: string[] = [];
         const values: (string | number | Date)[] = [];
 
-        // 🕒 Convertir fechas a zona horaria 'America/Bogota'
+        // 🕒 Zonas horarias
+        let zonedStart: string | null = null;
+        let zonedEnd: string | null = null;
+
         if (startDate) {
-            const zonedStart = moment
+            zonedStart = moment
                 .tz(startDate, "America/Bogota")
                 .startOf("day")
                 .format("YYYY-MM-DD HH:mm:ss");
@@ -184,7 +197,7 @@ export class OrderRepository implements IOrderRepository {
         }
 
         if (endDate) {
-            const zonedEnd = moment
+            zonedEnd = moment
                 .tz(endDate, "America/Bogota")
                 .endOf("day")
                 .format("YYYY-MM-DD HH:mm:ss");
@@ -209,37 +222,113 @@ export class OrderRepository implements IOrderRepository {
 
         const whereClause =
             queryParts.length > 0 ? `WHERE ${queryParts.join(" AND ")}` : "";
-        const cacheKey = `orders:report:${Buffer.from(JSON.stringify(filters)).toString("base64")}`;
+        const cacheKey = `orders:report:${Buffer.from(
+            JSON.stringify(filters),
+        ).toString("base64")}`;
 
         const cached = await redisClient.get(cacheKey);
         if (cached) return JSON.parse(cached);
 
+        // 1. Consulta principal
         const query = `
-        SELECT 
-            o.id AS orderId,
-            o.origin_address AS originAddress, 
-            o.weight,
-            o.dimensions,
-            o.product_type AS productType,
-            o.destination_address AS destination,
-            o.status,
-            o.created_at,
-            r.name AS routeName,
-            t.name AS transporterName
-        FROM orders o
-        LEFT JOIN routes r ON o.route_id = r.id
-        LEFT JOIN transporters t ON o.transporter_id = t.id
-        ${whereClause}
-        ORDER BY o.created_at DESC
-    `;
+            SELECT 
+                o.id AS orderId,
+                o.origin_address AS originAddress, 
+                o.weight,
+                o.dimensions,
+                o.product_type AS productType,
+                o.destination_address AS destination,
+                o.status,
+                o.created_at,
+                r.name AS routeName,
+                t.name AS transporterName
+            FROM orders o
+            LEFT JOIN routes r ON o.route_id = r.id
+            LEFT JOIN transporters t ON o.transporter_id = t.id
+            ${whereClause}
+            ORDER BY o.created_at DESC
+        `;
 
         const [rows] = await db.query(query, values);
-        const results = rows as DetailedOrder[];
+        const orders = rows as DetailedOrder[];
 
-        await redisClient.set(cacheKey, JSON.stringify(results), {
+        // 2. Consulta de métricas de desempeño
+        const metricParams: (string | number | Date)[] = [];
+        let metricWhere = "WHERE o.status = 'delivered'";
+
+        if (zonedStart) {
+            metricWhere += " AND o.delivered_time >= ?";
+            metricParams.push(zonedStart);
+        }
+
+        if (zonedEnd) {
+            metricWhere += " AND o.delivered_time <= ?";
+            metricParams.push(zonedEnd);
+        }
+
+        if (transporterId) {
+            metricWhere += " AND o.transporter_id = ?";
+            metricParams.push(transporterId);
+        }
+
+        if (routeId) {
+            metricWhere += " AND o.route_id = ?";
+            metricParams.push(routeId);
+        }
+
+        const metricQuery = `
+            SELECT 
+                t.id AS transporterId,
+                t.name AS transporterName,
+                COUNT(o.id) AS deliveredCount,
+                AVG(TIMESTAMPDIFF(SECOND, o.start_time, o.delivered_time)) AS avgDeliveryTimeSeconds
+            FROM orders o
+            JOIN transporters t ON o.transporter_id = t.id
+            ${metricWhere}
+            GROUP BY t.id
+        `;
+
+        const [metricRows] = await db.query(metricQuery, metricParams);
+
+        const metrics: TransporterPerformanceMetric[] = (
+            metricRows as any[]
+        ).map((row) => {
+            const avgSeconds = row.avgDeliveryTimeSeconds || 0;
+            const avgMinutes = Math.round(avgSeconds / 60);
+            const avgHours = parseFloat((avgSeconds / 3600).toFixed(2));
+
+            return {
+                transporterId: row.transporterId,
+                transporterName: row.transporterName,
+                deliveredCount: row.deliveredCount,
+                avgDeliveryTimeMinutes: avgMinutes,
+                averageDeliveryTimeHours: avgHours,
+                totalDeliveredOrders: row.deliveredCount,
+            };
+        });
+
+        const result = { orders, metrics };
+
+        await redisClient.set(cacheKey, JSON.stringify(result), {
             EX: 60 * 5,
         });
 
-        return results;
+        return result;
+    }
+    async updateOrderStatus(
+        orderId: number,
+        status: string,
+    ): Promise<{ orderId: number; status: string }> {
+        await db.query("UPDATE orders SET status = ? WHERE id = ?", [
+            status,
+            orderId,
+        ]);
+
+        // Actualizar en Redis
+        await redisClient.set(`order:${orderId}:status`, status, {
+            EX: 60 * 5,
+        });
+
+        return { orderId, status };
     }
 }
